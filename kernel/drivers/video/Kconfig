@@ -1,0 +1,230 @@
+menu "Graphics support"
+	depends on HAS_IOMEM
+
+menuconfig FB
+	tristate "Support for frame buffer devices"
+	---help---
+	  The frame buffer device provides an abstraction for the graphics
+	  hardware. It represents the frame buffer of some video hardware and
+	  allows application software to access the graphics hardware through
+	  a well-defined interface, so the software doesn't need to know
+	  anything about the low-level (hardware register) stuff.
+
+	  Frame buffer devices work identically across the different
+	  architectures supported by Linux and make the implementation of
+	  application programs easier and more portable; at this point, an X
+	  server exists which uses the frame buffer device exclusively.
+	  On several non-X86 architectures, the frame buffer device is the
+	  only way to use the graphics hardware.
+
+	  The device is accessed through special device nodes, usually located
+	  in the /dev directory, i.e. /dev/fb*.
+
+	  You need an utility program called fbset to make full use of frame
+	  buffer devices. Please read <file:Documentation/fb/framebuffer.txt>
+	  and the Framebuffer-HOWTO at
+	  <http://www.munted.org.uk/programming/Framebuffer-HOWTO-1.2.html> for more
+	  information.
+
+	  Say Y here and to the driver for your graphics board below if you
+	  are compiling a kernel for a non-x86 architecture.
+
+	  If you are compiling for the x86 architecture, you can say Y if you
+	  want to play with it, but it is not essential. Please note that
+	  running graphical applications that directly touch the hardware
+	  (e.g. an accelerated X server) and that are not frame buffer
+	  device-aware may cause unexpected results. If unsure, say N.
+
+config FB_MSM
+	tristate "MSM Frame Buffer support"
+	depends on FB && ARCH_MSM
+	select FB_BACKLIGHT if FB_MSM_BACKLIGHT
+	select NEW_LEDS
+	select LEDS_CLASS
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	---help---
+	  Support for MSM Framebuffer.
+
+if FB_MSM
+config FB_MSM_BACKLIGHT
+	bool "Support for backlight control"
+	default y
+	---help---
+	  Say Y here if you want to control the backlight of your display.
+
+config FB_MSM_LOGO
+	bool "MSM Frame Buffer Logo"
+	default n
+	---help---
+	  Show /initlogo.rle during boot.
+
+config FB_MSM_LCDC_HW
+	bool
+	default n
+
+choice
+	prompt "MDP HW version"
+	default FB_MSM_MDP31
+
+config FB_MSM_MDP31
+	select FB_MSM_LCDC_HW
+	bool "MDP HW ver3.1"
+	---help---
+	  Support for MSM MDP HW revision 3.1
+	  Say Y here if this is msm8x50 variant platform.
+endchoice
+
+choice
+	prompt "Default framebuffer color depth"
+	depends on FB_MSM_MDP31
+	default FB_MSM_DEFAULT_DEPTH_RGB565
+
+config FB_MSM_DEFAULT_DEPTH_RGB565
+	bool "16 bits per pixel (RGB565)"
+
+config FB_MSM_DEFAULT_DEPTH_ARGB8888
+	bool "32 bits per pixel (ARGB8888)"
+
+config FB_MSM_DEFAULT_DEPTH_RGBA8888
+	bool "32 bits per pixel (RGBA8888)"
+endchoice
+
+config FB_MSM_MDDI
+	bool
+	default y
+
+config FB_MSM_MDDI_SEMC_LCD_POWER_OFF_SLEEP_MODE
+	depends on FB_MSM
+	bool "PowerOff sleep mode"
+	select FB_MSM_MDDI
+	---help---
+	  Support for Power Off as Sleep mode
+
+config FB_MSM_MDDI_SEMC_LCD_WINDOW_ADJUST
+	depends on FB_MSM
+	bool "Window Adjust help function"
+	select FB_MSM_MDDI
+	---help---
+	  Support separate window adjust
+
+config FB_MSM_MDDI_DISABLE_MDP_HW_VSYNC
+	depends on FB_MSM
+	bool "Disable QC define"
+	select FB_MSM_MDDI
+	---help---
+	  Disables the Qualcomm define MDP_HW_VSYNC
+
+config FB_MSM_SEMC_LCD_BACKLIGHT_CONTROL
+	depends on FB_MSM
+	bool "FB lcd backlight control"
+	select FB_MSM_MDDI
+	---help---
+	  Suspend/resume backlight from frambuffer (synchronize with
+	  display power on/off
+
+config FB_MSM_MDDI_TMD_NT35580
+	depends on FB_MSM
+	tristate "MDDI NT35580 LCD FWVGA Panel"
+	select FB_MSM_MDDI
+	---help---
+	  Support for MDDI NT35580 LCD FWVGA (480x854) panel
+
+config FB_MSM_SECONDARY_PANEL_NONE
+	bool "NO Secondary panel"
+	---help---
+	  No secondary panel
+
+config FB_MSM_TVOUT_NONE
+	bool "NO TV Out"
+	---help---
+	  This will disable TV Out functionality.
+
+config FB_BACKLIGHT
+	bool
+	depends on FB
+	select BACKLIGHT_LCD_SUPPORT
+	select BACKLIGHT_CLASS_DEVICE
+	default n
+
+config FB_MODE_HELPERS
+        bool "Enable Video Mode Handling Helpers"
+        depends on FB
+	default n
+	---help---
+	  This enables functions for handling video modes using the
+	  Generalized Timing Formula and the EDID parser. A few drivers rely
+          on this feature such as the radeonfb, rivafb, and the i810fb. If
+	  your driver does not take advantage of this feature, choosing Y will
+	  just increase the kernel size by about 5K.
+
+config FB_TILEBLITTING
+       bool "Enable Tile Blitting Support"
+       depends on FB
+       default n
+       ---help---
+         This enables tile blitting.  Tile blitting is a drawing technique
+	 where the screen is divided into rectangular sections (tiles), whereas
+	 the standard blitting divides the screen into pixels. Because the
+	 default drawing element is a tile, drawing functions will be passed
+	 parameters in terms of number of tiles instead of number of pixels.
+	 For example, to draw a single character, instead of using bitmaps,
+	 an index to an array of bitmaps will be used.  To clear or move a
+	 rectangular section of a screen, the rectangle will be described in
+	 terms of number of tiles in the x- and y-axis.
+
+	 This is particularly important to one driver, matroxfb.  If
+	 unsure, say N.
+
+endif
+
+config FB_CFB_FILLRECT
+	bool "Enable CFB_FILLRECT Support"
+	depends on FB
+	default n
+	---help---
+	  Include the cfb_fillrect function for generic software rectangle
+	  filling. This is used by drivers that don't provide their own
+	  (accelerated) version.
+
+config FB_CFB_COPYAREA
+	bool "Enable CFB_COPYAREA Support"
+	depends on FB
+	default n
+	---help---
+	  Include the cfb_copyarea function for generic software area copying.
+	  This is used by drivers that don't provide their own (accelerated)
+	  version.
+
+config FB_CFB_IMAGEBLIT
+	bool "Enable CFB_IMAGEBLIT Support"
+	depends on FB
+	default n
+	---help---
+	  Include the cfb_imageblit function for generic software image
+	  blitting. This is used by drivers that don't provide their own
+	  (accelerated) version.
+
+config FB_CFB_REV_PIXELS_IN_BYTE
+	bool "Enable REV_PIXELS_IN_BYTE Support"
+	depends on FB
+	default n
+	---help---
+	  Allow generic frame-buffer functions to work on displays with 1, 2
+	  and 4 bits per pixel depths which has opposite order of pixels in
+	  byte order to bytes in long order.
+
+source "drivers/video/backlight/Kconfig"
+source "drivers/gpu/drm/Kconfig"
+source "drivers/gpu/msm/Kconfig"
+source "drivers/gpu/ion/Kconfig"
+
+config VIDEO_OUTPUT_CONTROL
+	tristate "Lowlevel video output switch controls"
+	help
+	  This framework adds support for low-level control of the video 
+	  output switch.
+
+endmenu
+

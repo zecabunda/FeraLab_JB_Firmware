@@ -1,0 +1,41 @@
+export ARCH=arm
+export SUBARCH=arm
+export USE_CCACHE=1
+export CROSS_COMPILE=/home/feravolt/ferra/toolchain/bin/arm-eabi-
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo '~         ***FeraLab***          ~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo ' '
+echo '>> Entering kernel menu...'
+cd
+cd ferra/kernel
+make menuconfig
+cd
+echo '>> FeraKernel ready.'
+echo ' '
+echo ' '

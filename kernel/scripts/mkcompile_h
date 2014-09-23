@@ -1,0 +1,73 @@
+TARGET=$1
+ARCH=$2
+SMP=$3
+PREEMPT=$4
+CC=$5
+
+vecho() { [ "${quiet}" = "silent_" ] || echo "$@" ; }
+
+if [ -r $TARGET -a ! -O include/linux/autoconf.h ]; then
+  vecho "  SKIPPED $TARGET"
+  exit 0
+fi
+
+set -f
+
+LC_ALL=C
+export LC_ALL
+
+if [ -z "$KBUILD_BUILD_VERSION" ]; then
+	if [ -r .version ]; then
+		VERSION=`cat .version`
+	else
+		VERSION=0
+		echo 0 > .version
+	fi
+else
+	VERSION=$KBUILD_BUILD_VERSION
+fi
+
+SEMC_BUILD_TIMESTAMP=`cd $srctree && scripts/timestamp_gen.sh`
+
+if [ -z "$SEMC_BUILD_TIMESTAMP" ]; then
+	TIMESTAMP=`date`
+else
+	TIMESTAMP=$SEMC_BUILD_TIMESTAMP
+fi
+
+CONFIG_FLAGS=""
+if [ -n "$SMP" ] ; then CONFIG_FLAGS="SMP"; fi
+if [ -n "$PREEMPT" ] ; then CONFIG_FLAGS="$CONFIG_FLAGS PREEMPT"; fi
+UTS_VERSION="#1 $CONFIG_FLAGS $TIMESTAMP"
+UTS_LEN=64
+
+( echo /\* This file is auto generated, version $VERSION \*/
+  if [ -n "$CONFIG_FLAGS" ] ; then echo "/* $CONFIG_FLAGS */"; fi
+  
+  echo \#define UTS_MACHINE \"$ARCH\"
+  echo \#define UTS_VERSION \"`echo $UTS_VERSION`\"
+  echo \#define LINUX_COMPILE_TIME \"EnergyCore\"
+  echo \#define LINUX_COMPILE_BY \"FeraVolt\"
+  echo \#define LINUX_COMPILE_HOST \"FeraLab\"
+
+  if [ -x /bin/dnsdomainname ]; then
+    echo \#define LINUX_COMPILE_DOMAIN \"`dnsdomainname`\"
+  elif [ -x /bin/domainname ]; then
+    echo \#define LINUX_COMPILE_DOMAIN \"`domainname`\"
+  else
+    echo \#define LINUX_COMPILE_DOMAIN
+  fi
+
+  echo \#define LINUX_COMPILER \"`$CC -v 2>&1 | tail -n 1`\"
+) > .tmpcompile
+
+if [ -r $TARGET ] && \
+      grep -v 'UTS_VERSION\|LINUX_COMPILE_TIME' $TARGET > .tmpver.1 && \
+      grep -v 'UTS_VERSION\|LINUX_COMPILE_TIME' .tmpcompile > .tmpver.2 && \
+      cmp -s .tmpver.1 .tmpver.2; then
+   rm -f .tmpcompile
+else
+   vecho "  UPD     $TARGET"
+   mv -f .tmpcompile $TARGET
+fi
+rm -f .tmpver.1 .tmpver.2

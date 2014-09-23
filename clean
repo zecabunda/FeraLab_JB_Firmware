@@ -1,0 +1,48 @@
+export ARCH=arm
+export SUBARCH=arm
+export USE_CCACHE=1
+export CROSS_COMPILE=/home/feravolt/ferra/toolchain/bin/arm-eabi-
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo ' '
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo '~         ***FeraLab***          ~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo ' '
+echo '>> Cleaning kernel directory...'
+cd
+cd ferra/kernel
+make mrproper
+make distclean
+make fera_es209ra_defconfig
+cd
+cd ferra/vendor/host
+make clobber
+cd
+cd ferra
+echo '>> FeraKernel ready.'
+echo ' '
+echo ' '
+
